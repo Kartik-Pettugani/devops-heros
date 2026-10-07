@@ -1,0 +1,23 @@
+# Production environment values override
+replicaCount: 5
+
+image:
+  repository: nginx
+  tag: "1.25.3-alpine"
+
+service:
+  type: LoadBalancer
+  port: 80
+  targetPort: 80
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+config:
+  welcomeMessage: "Welcome to HIGH AVAILABILITY PRODUCTION ENVIRONMENT!"
+  environment: "production"

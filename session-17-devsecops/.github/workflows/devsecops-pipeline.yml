@@ -1,0 +1,89 @@
+name: Complete DevSecOps Automated Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-unit-test:
+    name: 1 & 2. Code Build & Unit Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+      - run: npm ci
+      - run: npm test
+
+  sast-code-scan:
+    name: 3. SAST Scan (Semgrep)
+    needs: build-and-unit-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run Semgrep Static Code Analysis
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: p/default
+
+  sca-dependency-scan:
+    name: 4. SCA Scan (npm audit)
+    needs: build-and-unit-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: npm ci
+      - run: npm audit --audit-level=high
+
+  secret-scan:
+    name: 5. Secret Detection (Trufflehog)
+    needs: build-and-unit-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: TruffleHog Secret Scan
+        uses: trufflesecurity/trufflehog-actions-scan@v2
+        with:
+          target_directory: ./
+
+  container-image-scan:
+    name: 6 & 7. Container Build, Trivy Scan & Security Gate
+    needs: [sast-code-scan, sca-dependency-scan, secret-scan]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build Local Container Image
+        run: docker build -t devsecops-app:local .
+
+      - name: Run Trivy Container Vulnerability Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'devsecops-app:local'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+  deploy-to-k8s:
+    name: 8 & 9. Push Image & Deploy to Kubernetes
+    needs: container-image-scan
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v3
+      - name: Log in to Registry
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Push Container Image
+        run: |
+          docker tag devsecops-app:local ${{ secrets.DOCKERHUB_USERNAME }}/devsecops-app:${{ github.sha }}
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/devsecops-app:${{ github.sha }}
+      - name: Deploy Manifests to Kubernetes
+        run: |
+          kubectl apply -f k8s-manifests/

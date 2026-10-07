@@ -1,0 +1,9 @@
+apiVersion: v2
+name: my-web-app
+description: A Helm chart for deploying production-ready Nginx web application on Kubernetes
+type: application
+version: 0.1.0
+appVersion: "1.25.3"
+maintainers:
+  - name: Manohar
+    email: manohar@devops assignment

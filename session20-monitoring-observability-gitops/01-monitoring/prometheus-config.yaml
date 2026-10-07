@@ -1,0 +1,38 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - 'alert-rules.yaml'
+
+scrape_configs:
+  - job_name: 'kubernetes-pods'
+    kubernetes_sd_configs:
+      - role: pod
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+
+  - job_name: 'app-metrics'
+    static_configs:
+      - targets: ['localhost:3000']
+---
+groups:
+  - name: node_alerts
+    rules:
+      - alert: HighCPUUsage
+        expr: node_cpu_utilization > 85
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Node CPU utilization exceeded 85%"
+
+      - alert: HighMemoryUsage
+        expr: node_memory_utilization > 90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Node Memory utilization exceeded 90%"

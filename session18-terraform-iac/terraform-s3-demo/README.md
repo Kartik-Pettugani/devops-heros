@@ -1,256 +1,52 @@
-# Terraform S3 Bucket Demo
+# Session 18 - Task 1: Terraform AWS S3 Bucket Provisioning
 
-## Project Structure
+This project provisions an encrypted, version-enabled AWS S3 bucket using Terraform Infrastructure as Code.
 
-```text
-terraform-s3-demo/
-|
-|-- README.md
-|-- terraform.tf
-|-- providers.tf
-|-- variables.tf
-|-- terraform.tfvars
-|-- main.tf
-|-- outputs.tf
-|-- .gitignore
-```
+---
 
-## Architecture
+## 🛠️ Step-by-Step Terraform Command Execution Workflow
 
-```text
-terraform.tf
-     |
-     v
-Provider Configuration
-     |
-     v
-variables.tf
-     |
-     v
-terraform.tfvars
-     |
-     v
-main.tf
-     |
-     v
-aws_s3_bucket.demo
-     |
-     v
-AWS S3 Bucket
-     |
-     v
-outputs.tf
-```
-
-## Prerequisites
-
-Install:
-
-* Terraform
-* AWS CLI
-
-Configure AWS:
-
-```bash
-aws configure
-```
-
-Verify:
-
-```bash
-aws sts get-caller-identity
-```
-
-## Terraform Workflow
-
-### 1. Initialize
-
+### 1. Initialize Working Directory
+Downloads provider plugins (AWS Provider):
 ```bash
 terraform init
 ```
 
-Expected:
-
-```text
-Initializing the provider plugins...
-Terraform has been successfully initialized!
-```
-
-### 2. Format
-
+### 2. Format & Validate Code
+Enforces canonical code formatting and checks syntax validity:
 ```bash
 terraform fmt
-```
-
-### 3. Validate
-
-```bash
 terraform validate
 ```
 
-Expected:
-
-```text
-Success! The configuration is valid.
-```
-
-### 4. Plan
-
+### 3. Generate Execution Plan
+Previews resources to be created without modifying real infrastructure:
 ```bash
 terraform plan
 ```
 
-Expected:
-
-```text
-Plan: 1 to add, 0 to change, 0 to destroy.
-```
-
-### 5. Apply
-
+### 4. Apply Infrastructure Configuration
+Provisions resources in AWS cloud:
 ```bash
-terraform apply
+terraform apply -auto-approve
 ```
 
-Terraform asks:
-
-```text
-Do you want to perform these actions?
-  Only 'yes' will be accepted to approve.
-Enter a value:
-```
-
-Enter:
-
-```text
-yes
-```
-
-Expected:
-
-```text
-Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
-Outputs:
-bucket_arn = "arn:aws:s3:::demo"
-bucket_name = "demo"
-bucket_region = "ap-south-1"
-```
-
-### 6. Check State
-
+### 5. Inspect State & Outputs
 ```bash
-terraform state list
-```
-
-Expected:
-
-```text
-aws_s3_bucket.demo
-```
-
-Inspect the resource:
-
-```bash
-terraform state show aws_s3_bucket.demo
-```
-
-### 7. Check Output
-
-```bash
+terraform show
 terraform output
 ```
 
-Or:
-
+### 6. Clean Up & Destroy Resources
+Teardown all provisioned AWS cloud resources:
 ```bash
-terraform output bucket_name
+terraform destroy -auto-approve
 ```
 
-Expected:
+---
 
-```text
-"demo"
-```
+## 📷 Command Output Evidence
 
-### 8. Verify Using AWS CLI
-
-```bash
-aws s3 ls
-```
-
-Or:
-
-```bash
-aws s3api head-bucket --bucket demo
-```
-
-### 9. Destroy
-
-After completing the demo:
-
-```bash
-terraform plan -destroy
-```
-
-Then:
-
-```bash
-terraform destroy
-```
-
-Enter:
-
-```text
-yes
-```
-
-Expected:
-
-```text
-Destroy complete! Resources: 1 destroyed.
-```
-
-## Complete Demo
-
-Run:
-
-```bash
-aws sts get-caller-identity
-terraform init
-terraform fmt
-terraform validate
-terraform plan
-terraform apply
-terraform output
-terraform state list
-terraform state show aws_s3_bucket.demo
-terraform plan -destroy
-terraform destroy
-```
-
-## Terraform Lifecycle
-
-```text
-              .tf files
-                  |
-                  v
-          terraform init
-                  |
-                  v
-          terraform validate
-                  |
-                  v
-            terraform plan
-                  |
-                  v
-           terraform apply
-                  |
-                  v
-             AWS S3
-                  |
-                  v
-          terraform state
-                  |
-                  v
-          terraform destroy
-```
+![Terraform Init Plan Apply](../images/terraform_init_plan_apply.png)
+![Terraform S3 Output](../images/terraform_s3_created.png)
+![Terraform Destroy Workflow](../images/terraform_destroy.png)
